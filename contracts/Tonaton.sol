@@ -87,7 +87,7 @@ contract Tonaton {
         Auction storage _auction = auctions[index];
         require(_auction.startTime == 0, "Auction has already started");
         _auction.startTime = block.timestamp;
-        _auction.endTime = endTime;
+        _auction.endTime = block.timestamp + endTime;
         emit AuctionStarted(index, _auction.startTime);
     }
 
@@ -159,9 +159,10 @@ contract Tonaton {
     }
 
     ///@dev withdraw fees charged for successful auctions
-    function withdrawChargedFees() external onlyAdmin {
-        _chargedFees = 0;
-        (bool sent,) = msg.sender.call{value: _chargedFees}("");
+    function withdrawChargedFees() external onlyAdmin { 
+        uint256 value = _chargedFees;
+        _chargedFees = 0;       
+        (bool sent,) = msg.sender.call{value: value}("");        
         require(sent, "Failed to send amount");
     }
 
