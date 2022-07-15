@@ -160,8 +160,9 @@ contract Tonaton {
 
     ///@dev withdraw fees charged for successful auctions
     function withdrawChargedFees() external onlyAdmin {
+        uint amount = _chargedFees;
         _chargedFees = 0;
-        (bool sent,) = msg.sender.call{value: _chargedFees}("");
+        (bool sent,) = msg.sender.call{value: amount}("");
         require(sent, "Failed to send amount");
     }
 
