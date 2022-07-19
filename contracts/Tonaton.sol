@@ -160,6 +160,7 @@ contract Tonaton {
     }
 
     ///@dev withdraw fees charged for successful auctions
+
     function withdrawChargedFees() external onlyAdmin {
         uint amount = _chargedFees;
         _chargedFees = 0;
