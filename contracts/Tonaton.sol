@@ -165,19 +165,13 @@ contract Tonaton is IERC721Receiver {
         auctionHasStarted(index)
     {
         Auction storage _auction = auctions[index];
-        require(
-            block.timestamp >= _auction.endTime,
-            "Auction time has not elapsed"
-        );
 
-        if (_auction.highestBidder == address(0)) {
-            IERC721(_auction.nft).transferFrom(
-                address(this),
-                _auction.seller,
-                _auction.tokenId
-            );
-            emit AuctionEnded(index, block.timestamp);
-            return;
+        require(block.timestamp >= _auction.endTime, "Auction time has not elapsed");
+
+        if(_auction.highestBidder == address(0)){
+             IERC721(_auction.nft).safeTransferFrom(address(this), _auction.seller, _auction.tokenId);
+             emit AuctionEnded(index, block.timestamp);
+             return;
         }
 
         address winner = _auction.highestBidder;
@@ -186,12 +180,8 @@ contract Tonaton is IERC721Receiver {
         uint256 amount = _auction.highestBid - fee;
         _chargedFees += fee;
 
-        IERC721(_auction.nft).transferFrom(
-            address(this),
-            winner,
-            _auction.tokenId
-        );
-
+        IERC721(_auction.nft).safeTransferFrom(address(this), winner, _auction.tokenId);
+        
         _auction.highestBid = 0;
 
         (bool sent, ) = payable(_auction.seller).call{value: amount}("");
@@ -223,10 +213,10 @@ contract Tonaton is IERC721Receiver {
     }
 
     ///@dev withdraw fees charged for successful auctions
-    function withdrawChargedFees() external payable onlyAdmin {
-        uint256 amount = _chargedFees;
+    function withdrawChargedFees() external onlyAdmin {
+        uint amount = _chargedFees;
         _chargedFees = 0;
-        (bool sent, ) = payable(_admin).call{value: amount}("");
+        (bool sent,) = msg.sender.call{value: amount}("");
         require(sent, "Failed to send amount");
     }
 
@@ -242,4 +232,5 @@ contract Tonaton is IERC721Receiver {
     ) external pure override returns (bytes4) {
         return bytes4(this.onERC721Received.selector);
     }
+
 }
