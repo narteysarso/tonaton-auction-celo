@@ -87,7 +87,7 @@ contract Tonaton {
         Auction storage _auction = auctions[index];
         require(_auction.startTime == 0, "Auction has already started");
         _auction.startTime = block.timestamp;
-        _auction.endTime = endTime;
+        _auction.endTime = block.timestamp + endTime;
         emit AuctionStarted(index, _auction.startTime);
     }
 
@@ -97,8 +97,9 @@ contract Tonaton {
     */
     function bid(uint index) external payable auctionHasStarted(index){
         Auction storage _auction = auctions[index];
-        require(msg.value > _auction.highestBid, "Amount is too small");
+        require(msg.value > _auction.leastBid, "Amount is too small");
         require(_auction.endTime > block.timestamp, "Auction is over");
+
         if(msg.value > _auction.highestBid){
             _auction.highestBid = msg.value;
             _auction.highestBidder = msg.sender;
@@ -118,7 +119,7 @@ contract Tonaton {
         require(block.timestamp >= _auction.endTime, "Auction time has not elapsed");
 
         if(_auction.highestBidder == address(0)){
-             IERC721(_auction.nft).transferFrom(address(this), _auction.seller, _auction.tokenId);
+             IERC721(_auction.nft).safeTransferFrom(address(this), _auction.seller, _auction.tokenId);
              emit AuctionEnded(index, block.timestamp);
              return;
         }
@@ -129,7 +130,7 @@ contract Tonaton {
         uint amount = _auction.highestBid - fee;
         _chargedFees += fee;
 
-        IERC721(_auction.nft).transferFrom(address(this), winner, _auction.tokenId);
+        IERC721(_auction.nft).safeTransferFrom(address(this), winner, _auction.tokenId);
         
         _auction.highestBid = 0;
 
